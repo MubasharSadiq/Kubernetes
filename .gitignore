@@ -1,0 +1,7 @@
+# Rules
+*.log
+node_modules/
+.env
+
+.md
+.pdf
