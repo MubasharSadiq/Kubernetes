@@ -7,15 +7,9 @@ set -euxo pipefail
 # Configuration variables
 NODENAME=$(hostname -s)
 POD_CIDR="192.168.0.0/16"
-KUBERNETES_VERSION="v1.30.0"  # Specify the desired Kubernetes version
 
 # Fetch the instance's public IP from AWS metadata service
 MASTER_PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
-
-# Install specific version of kubeadm, kubelet, and kubectl
-sudo apt-get update
-sudo apt-get install -y kubelet="$KUBERNETES_VERSION" kubeadm="$KUBERNETES_VERSION" kubectl="$KUBERNETES_VERSION"
-sudo apt-mark hold kubelet kubeadm kubectl
 
 # Pull required images
 sudo kubeadm config images pull
