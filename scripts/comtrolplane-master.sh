@@ -9,13 +9,13 @@ NODENAME=$(hostname -s)
 POD_CIDR="192.168.0.0/16"
 
 # Fetch the instance's public IP from AWS metadata service
-MASTER_PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+MASTER_PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 
 # Pull required images
 sudo kubeadm config images pull
 
 # Initialize kubeadm
-sudo kubeadm init --control-plane-endpoint="$MASTER_PUBLIC_IP" --apiserver-cert-extra-sans="$MASTER_PUBLIC_IP" --pod-network-cidr="$POD_CIDR" --node-name "$NODENAME"
+sudo kubeadm init --control-plane-endpoint="$MASTER_PRIVATE_IP" --apiserver-cert-extra-sans="$MASTER_PRIVATE_IP" --pod-network-cidr="$POD_CIDR" --node-name "$NODENAME"
 
 # Configure kubeconfig
 mkdir -p "$HOME"/.kube
@@ -33,5 +33,12 @@ echo "Kubernetes control plane setup completed successfully"
 
 # Generate join command for worker nodes
 JOIN_COMMAND=$(kubeadm token create --print-join-command)
+
+# Display with clear formatting and spaces
+echo ""
+echo "------------------------------------------------"
 echo "Worker node join command:"
+echo ""
 echo "$JOIN_COMMAND"
+echo "------------------------------------------------"
+echo ""
