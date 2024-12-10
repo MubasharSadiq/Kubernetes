@@ -130,8 +130,8 @@ Resources:
           ToPort: 22
           CidrIp: "0.0.0.0/0" # Replace with your admin IP range.
         - IpProtocol: tcp
-          FromPort: 10250
-          ToPort: 10250
+          FromPort: 10248
+          ToPort: 10260
           CidrIp: "10.0.0.0/16"  # Private VPC 
       SecurityGroupEgress:
         - IpProtocol: -1
