@@ -115,6 +115,20 @@ Resources:
       SubnetId: !Ref PublicSubnet3
       RouteTableId: !Ref PublicRouteTable
 
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Security group for the load balancer"
+      VpcId: !Ref VPC  # Reference your VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: "0.0.0.0/0"  # Allows inbound traffic from anywhere
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: "0.0.0.0/0"  # Allows all outbound traffic
+
   SecurityGroupControlPlane:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -163,6 +177,10 @@ Resources:
           FromPort: 53
           ToPort: 53
           CidrIp: "10.0.0.0/16"
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: "0.0.0.0/0"
