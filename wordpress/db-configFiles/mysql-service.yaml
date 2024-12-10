@@ -1,0 +1,11 @@
+# Create a ClusterIP service to expose MySQL internally:
+apiVersion: v1 
+kind: Service 
+metadata: 
+  name: mysql-service 
+spec: 
+  ports: 
+    - port: 3306 
+      protocol: TCP 
+  selector: 
+    app: mysql
