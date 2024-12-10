@@ -8,7 +8,7 @@ node_modules/
 screenshots/
 
 # Ignore the MySQL Secret YAML file
-mysql-secret.yaml
+
 
 # Ignore any sensitive files
 *.env
