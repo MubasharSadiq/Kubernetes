@@ -1,6 +1,5 @@
 #!/bin/bash
-#
-# Setup for Control Plane (Master) servers in AWS with Cilium CNI
+# Setup for Control Plane (Master) servers in AWS with Cilico CNI
 
 set -euxo pipefail
 
@@ -8,36 +7,33 @@ set -euxo pipefail
 NODENAME=$(hostname -s)
 POD_CIDR="192.168.0.0/16"
 
-# Fetch the instance's public IP from AWS metadata service
+# Fetch the instance's private IP from AWS metadata service
 MASTER_PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 
-# Pull required images
+# Pull required images for Kubernetes components
 sudo kubeadm config images pull
 
 # Initialize kubeadm
 sudo kubeadm init --control-plane-endpoint="$MASTER_PRIVATE_IP" --apiserver-cert-extra-sans="$MASTER_PRIVATE_IP" --pod-network-cidr="$POD_CIDR" --node-name "$NODENAME"
 
-# Configure kubeconfig
+# Configure kubeconfig for the current user
 mkdir -p "$HOME"/.kube
 sudo cp -i /etc/kubernetes/admin.conf "$HOME"/.kube/config
 sudo chown "$(id -u)":"$(id -g)" "$HOME"/.kube/config
 
-# Install Cilium Network Plugin
-kubectl create -f https://github.com/cilium/cilium/releases/download/v1.13.3/cilium-operator.yaml
-kubectl create -f https://github.com/cilium/cilium/releases/download/v1.13.3/cilium.yaml
+# Install Claico Network Plugin Network 
 
-# Install Cilium Hubble (Optional, for monitoring and visibility)
-kubectl create -f https://github.com/cilium/hubble/releases/download/v0.11.0/hubble-ui.yaml
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 
-# Enable kubelet service
+# Enable kubelet service to start automatically on boot
 sudo systemctl enable kubelet
-
-echo "Kubernetes control plane setup completed successfully with Cilium"
-
+echo ""
+echo "Kubernetes control plane setup completed successfully with Cilico"
+echo ""
 # Generate join command for worker nodes
 JOIN_COMMAND=$(kubeadm token create --print-join-command)
 
-# Display with clear formatting and spaces
+# Display the join command with clear formatting
 echo ""
 echo "------------------------------------------------"
 echo "Worker node join command:"
