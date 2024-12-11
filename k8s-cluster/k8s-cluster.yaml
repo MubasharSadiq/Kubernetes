@@ -176,11 +176,14 @@ Resources:
         - IpProtocol: tcp
           FromPort: 53
           ToPort: 53
-          CidrIp: "10.0.0.0/16"
+          CidrIp: "0.0.0.0/0"
         - IpProtocol: tcp
           FromPort: '80'
           ToPort: '80'
-          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443 # Allow HTTPS traffic for Ingress.
+          CidrIp: "0.0.0.0/0"
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: "0.0.0.0/0"

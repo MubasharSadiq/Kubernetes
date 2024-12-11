@@ -3,9 +3,11 @@ kind: Service
 metadata:
   name: wordpress-service
 spec:
-  type: LoadBalancer # Change to NodePort if LoadBalancer is not supported in your environment
-  ports:
-    - port: 80 # External port to access WordPress
-      targetPort: 80 # Port in the container where WordPress runs
+  type: NodePort
   selector:
     app: wordpress # Match the labels of the WordPress pods
+  ports:
+    - name: http
+      port: 80 # External port to access WordPress
+      targetPort: 80 # Port in the container where WordPress runs
+      nodePort: 30007
