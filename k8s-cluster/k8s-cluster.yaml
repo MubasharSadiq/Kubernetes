@@ -84,50 +84,19 @@ Resources:
       MapPublicIpOnLaunch: true
       AvailabilityZone: !Select [ 2, !GetAZs "" ]
 
-  PublicRouteTable:
-    Type: AWS::EC2::RouteTable
+  # Create the IAM role for worker nodes with ELB permissions
+  WorkerNodeInstanceRole:
+    Type: AWS::IAM::Role
     Properties:
-      VpcId: !Ref VPC
-
-  PublicRoute:
-    Type: AWS::EC2::Route
-    DependsOn: VPCGatewayAttachment
-    Properties:
-      RouteTableId: !Ref PublicRouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref InternetGateway
-
-  SubnetRouteTableAssociation1:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref PublicSubnet1
-      RouteTableId: !Ref PublicRouteTable
-
-  SubnetRouteTableAssociation2:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref PublicSubnet2
-      RouteTableId: !Ref PublicRouteTable
-
-  SubnetRouteTableAssociation3:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref PublicSubnet3
-      RouteTableId: !Ref PublicRouteTable
-
-  LoadBalancerSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: "Security group for the load balancer"
-      VpcId: !Ref VPC  # Reference your VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '80'
-          ToPort: '80'
-          CidrIp: "0.0.0.0/0"  # Allows inbound traffic from anywhere
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: "0.0.0.0/0"  # Allows all outbound traffic
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: "sts:AssumeRole"
+            Principal:
+              Service: "ec2.amazonaws.com"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
 
   SecurityGroupControlPlane:
     Type: AWS::EC2::SecurityGroup
@@ -135,14 +104,19 @@ Resources:
       GroupDescription: Security group for Kubernetes control plane nodes.
       VpcId: !Ref VPC 
       SecurityGroupIngress:
+        # Kubernetes API server port
         - IpProtocol: tcp
           FromPort: 6443
           ToPort: 6443
           CidrIp: "10.0.0.0/16" # Private VPC 
+        
+        # SSH access to the control plane (replace with your IP range)
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
           CidrIp: "0.0.0.0/0" # Replace with your admin IP range.
+        
+        # Kubelet port range (for health checks)
         - IpProtocol: tcp
           FromPort: 10248
           ToPort: 10260
@@ -157,33 +131,47 @@ Resources:
       GroupDescription: Security group for Kubernetes worker nodes.
       VpcId: !Ref VPC
       SecurityGroupIngress:
+        # SSH access to worker nodes (replace with your IP range)
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
           CidrIp: "0.0.0.0/0" # Replace with your admin IP range.
+        
+        # Kubelet API (for communication between master and worker nodes)
         - IpProtocol: tcp
           FromPort: 10250
           ToPort: 10250
           SourceSecurityGroupId: !Ref SecurityGroupControlPlane
+        
+        # NodePort range (for services exposed to the external network)
         - IpProtocol: tcp
           FromPort: 30000
           ToPort: 32767 # NodePort range in Kubernetes by default.
           CidrIp: "10.0.0.0/16" # Replace with trusted CIDR block.
+        
+        # DNS UDP traffic (for DNS resolution)
         - IpProtocol: udp
           FromPort: 53
           ToPort: 53
           CidrIp: "10.0.0.0/16" # Replace with trusted CIDR block for DNS.
+        
+        # DNS TCP traffic (for DNS resolution)
         - IpProtocol: tcp
           FromPort: 53
           ToPort: 53
-          CidrIp: "0.0.0.0/0"
+          CidrIp: "0.0.0.0/0"  # Allow DNS for all external services.
+        
+        # HTTP traffic (for Ingress or LoadBalancer)
         - IpProtocol: tcp
           FromPort: '80'
           ToPort: '80'
+          CidrIp: "0.0.0.0/0" # Allow HTTP traffic for Ingress.
+        
+        # HTTPS traffic (for Ingress or LoadBalancer)
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443 # Allow HTTPS traffic for Ingress.
-          CidrIp: "0.0.0.0/0"
+          CidrIp: "0.0.0.0/0" # Allow HTTPS traffic for Ingress.
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: "0.0.0.0/0"
@@ -197,6 +185,7 @@ Resources:
       SubnetId: !Ref PublicSubnet1
       SecurityGroupIds:
         - !Ref SecurityGroupControlPlane
+      IamInstanceProfile: !Ref WorkerNodeInstanceRole # Attach the IAM role to the EC2 instance
       Tags:
         - Key: Name
           Value: k8s-node-1
@@ -210,6 +199,7 @@ Resources:
       SubnetId: !Ref PublicSubnet2
       SecurityGroupIds:
         - !Ref SecurityGroupWorkerNodes
+      IamInstanceProfile: !Ref WorkerNodeInstanceRole # Attach the IAM role to the EC2 instance
       Tags:
         - Key: Name
           Value: k8s-node-2
@@ -223,6 +213,7 @@ Resources:
       SubnetId: !Ref PublicSubnet3
       SecurityGroupIds:
         - !Ref SecurityGroupWorkerNodes
+      IamInstanceProfile: !Ref WorkerNodeInstanceRole # Attach the IAM role to the EC2 instance
       Tags:
         - Key: Name
           Value: k8s-node-3

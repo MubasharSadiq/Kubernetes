@@ -23,21 +23,21 @@ sudo chown "$(id -u)":"$(id -g)" "$HOME"/.kube/config
 
 # Install Claico Network Plugin Network 
 
-kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/tigera-operator.yaml
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/custom-resources.yaml
 
 # Enable kubelet service to start automatically on boot
 sudo systemctl enable kubelet
 echo ""
 echo "Kubernetes control plane setup completed successfully with Cilico"
 echo ""
+echo ""
 # Generate join command for worker nodes
 JOIN_COMMAND=$(kubeadm token create --print-join-command)
 
 # Display the join command with clear formatting
 echo ""
-echo "------------------------------------------------"
 echo "Worker node join command:"
 echo ""
 echo "$JOIN_COMMAND"
-echo "------------------------------------------------"
 echo ""
