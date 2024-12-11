@@ -84,20 +84,6 @@ Resources:
       MapPublicIpOnLaunch: true
       AvailabilityZone: !Select [ 2, !GetAZs "" ]
 
-  # Create the IAM role for worker nodes with ELB permissions
-  WorkerNodeInstanceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Action: "sts:AssumeRole"
-            Principal:
-              Service: "ec2.amazonaws.com"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
-
   SecurityGroupControlPlane:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -185,7 +171,6 @@ Resources:
       SubnetId: !Ref PublicSubnet1
       SecurityGroupIds:
         - !Ref SecurityGroupControlPlane
-      IamInstanceProfile: !Ref WorkerNodeInstanceRole # Attach the IAM role to the EC2 instance
       Tags:
         - Key: Name
           Value: k8s-node-1
@@ -199,7 +184,6 @@ Resources:
       SubnetId: !Ref PublicSubnet2
       SecurityGroupIds:
         - !Ref SecurityGroupWorkerNodes
-      IamInstanceProfile: !Ref WorkerNodeInstanceRole # Attach the IAM role to the EC2 instance
       Tags:
         - Key: Name
           Value: k8s-node-2
@@ -213,7 +197,6 @@ Resources:
       SubnetId: !Ref PublicSubnet3
       SecurityGroupIds:
         - !Ref SecurityGroupWorkerNodes
-      IamInstanceProfile: !Ref WorkerNodeInstanceRole # Attach the IAM role to the EC2 instance
       Tags:
         - Key: Name
           Value: k8s-node-3
