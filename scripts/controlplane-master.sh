@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Setup for Control Plane (Master) servers in AWS
+# Setup for Control Plane (Master) servers in AWS with Cilium CNI
 
 set -euxo pipefail
 
@@ -22,14 +22,17 @@ mkdir -p "$HOME"/.kube
 sudo cp -i /etc/kubernetes/admin.conf "$HOME"/.kube/config
 sudo chown "$(id -u)":"$(id -g)" "$HOME"/.kube/config
 
-# Install Calico Network Plugin
-kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/tigera-operator.yaml
-kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/custom-resources.yaml
+# Install Cilium Network Plugin
+kubectl create -f https://github.com/cilium/cilium/releases/download/v1.13.3/cilium-operator.yaml
+kubectl create -f https://github.com/cilium/cilium/releases/download/v1.13.3/cilium.yaml
+
+# Install Cilium Hubble (Optional, for monitoring and visibility)
+kubectl create -f https://github.com/cilium/hubble/releases/download/v0.11.0/hubble-ui.yaml
 
 # Enable kubelet service
 sudo systemctl enable kubelet
 
-echo "Kubernetes control plane setup completed successfully"
+echo "Kubernetes control plane setup completed successfully with Cilium"
 
 # Generate join command for worker nodes
 JOIN_COMMAND=$(kubeadm token create --print-join-command)
