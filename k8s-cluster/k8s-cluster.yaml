@@ -84,6 +84,37 @@ Resources:
       MapPublicIpOnLaunch: true
       AvailabilityZone: !Select [ 2, !GetAZs "" ]
 
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetRouteTableAssociation3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet3
+      RouteTableId: !Ref PublicRouteTable
+
   SecurityGroupControlPlane:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -133,7 +164,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 30000
           ToPort: 32767 # NodePort range in Kubernetes by default.
-          CidrIp: "10.0.0.0/16" # Replace with trusted CIDR block.
+          CidrIp: "0.0.0.0/0" # Replace with trusted CIDR block.
         
         # DNS UDP traffic (for DNS resolution)
         - IpProtocol: udp
