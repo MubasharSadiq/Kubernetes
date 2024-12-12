@@ -47,7 +47,7 @@ spec:
       dnsPolicy: ClusterFirst
       containers:
         - name: wordpress
-          image: wordpress:6.2.1-apache
+          image: mubasharsadiq/wordpress-custom:latest
           envFrom:
             - configMapRef:
                 name: wordpress-db-config  # Ensure this ConfigMap exists with DB settings
