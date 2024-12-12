@@ -24,6 +24,7 @@ spec:
   resources:
     requests:
       storage: 5Gi
+  storageClassName: local-storage  # Specify the storage class
 ---
 apiVersion: apps/v1
 kind: Deployment

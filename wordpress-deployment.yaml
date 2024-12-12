@@ -23,7 +23,8 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: 4Gi
+  storageClassName: local-storage  # Specify the storage class
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -47,7 +48,7 @@ spec:
       dnsPolicy: ClusterFirst
       containers:
         - name: wordpress
-          image: mubasharsadiq/wordpress-custom:latest
+          image: wordpress:6.2.1-apache
           envFrom:
             - configMapRef:
                 name: wordpress-db-config  # Ensure this ConfigMap exists with DB settings

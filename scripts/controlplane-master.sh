@@ -23,6 +23,7 @@ sudo chown "$(id -u)":"$(id -g)" "$HOME"/.kube/config
 
 # Install Calico Network Plugin
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/tigera-operator.yaml
+
 kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/custom-resources.yaml
 
 # Enable kubelet service to start automatically on boot
@@ -33,11 +34,4 @@ echo "Kubernetes control plane setup completed successfully with Calico"
 echo ""
 
 # Generate join command for worker nodes
-JOIN_COMMAND=$(kubeadm token create --print-join-command)
-
-# Display the join command with clear formatting
-echo ""
-echo "Worker node join command:"
-echo ""
-echo "$JOIN_COMMAND"
-echo ""
+kubeadm token create --print-join-command
