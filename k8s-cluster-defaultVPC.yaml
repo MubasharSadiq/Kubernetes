@@ -1,0 +1,138 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for Kubernetes cluster using default VPC and subnets'
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: "t2.medium"
+    Description: EC2 instance type for Kubernetes nodes
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access
+
+  AMIId:
+    Type: AWS::EC2::Image::Id
+    Default: "ami-0e9085e60087ce171"
+    Description: AMI ID for Ubuntu2404
+
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC ID where the resources will be deployed.
+
+  SubnetId1:
+    Type: AWS::EC2::Subnet::Id
+    Description: Subnet ID for EC2 instance 1 (usually in AZ-1)
+    
+  SubnetId2:
+    Type: AWS::EC2::Subnet::Id
+    Description: Subnet ID for EC2 instance 2 (usually in AZ-2)
+
+  SubnetId3:
+    Type: AWS::EC2::Subnet::Id
+    Description: Subnet ID for EC2 instance 3 (usually in AZ-3)
+
+Resources:
+  SecurityGroupControlPlane:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Kubernetes control plane nodes.
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6443
+          ToPort: 6443
+          CidrIp: "172.31.0.0/16" # Private VPC CIDR block (for default VPC)
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "0.0.0.0/0" # Replace with your admin IP range.
+        - IpProtocol: tcp
+          FromPort: 10248
+          ToPort: 10260
+          CidrIp: "172.31.0.0/16" # Private VPC CIDR block
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: "0.0.0.0/0"
+
+  SecurityGroupWorkerNodes:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Kubernetes worker nodes.
+      VpcId: !Ref VPCId # Reference the specified VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "0.0.0.0/0" # Replace with your admin IP range.
+        - IpProtocol: tcp
+          FromPort: 10250
+          ToPort: 10250
+          SourceSecurityGroupId: !Ref SecurityGroupControlPlane
+        - IpProtocol: tcp
+          FromPort: 30000
+          ToPort: 32767
+          CidrIp: "0.0.0.0/0" # Replace with trusted CIDR block.
+        - IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: "172.31.0.0/16" # Private VPC CIDR block
+        - IpProtocol: tcp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: "0.0.0.0/0"
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: "0.0.0.0/0"
+
+  EC2Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: !Ref AMIId
+      SubnetId: !Ref SubnetId1 # Reference subnet parameter
+      SecurityGroupIds:
+        - !Ref SecurityGroupControlPlane
+      Tags:
+        - Key: Name
+          Value: k8s-node-1
+
+  EC2Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: !Ref AMIId
+      SubnetId: !Ref SubnetId2 # Reference subnet parameter
+      SecurityGroupIds:
+        - !Ref SecurityGroupWorkerNodes
+      Tags:
+        - Key: Name
+          Value: k8s-node-2
+
+  EC2Instance3:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: !Ref AMIId
+      SubnetId: !Ref SubnetId3 # Reference subnet parameter
+      SecurityGroupIds:
+        - !Ref SecurityGroupWorkerNodes
+      Tags:
+        - Key: Name
+          Value: k8s-node-3
+
+Outputs:
+  InstancePublicIPs:
+    Description: Public IPs of the EC2 instances.
+    Value: !Join [", ", [!GetAtt EC2Instance1.PublicIp, !GetAtt EC2Instance2.PublicIp, !GetAtt EC2Instance3.PublicIp]]
