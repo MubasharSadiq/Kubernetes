@@ -6,6 +6,7 @@ node_modules/
 *.pdf
 
 screenshots/
+presentation/
 
 # Ignore the MySQL Secret YAML file
 

@@ -8,11 +8,14 @@ apps/# random steps:
 	  - Pros and Cons
 - What is Kubernetes?
 - Describe key components of Control-Plane (master node) and Worker Node.
-- What is `kubectl`
-- What is `minikube` and what are other options for us to choose? 
-	  - Why we chose `minikube`
+- Options to install Kubernetes like, minikube and kubeadm. 
+- What is kubeadm and what are other options for us to choose? 
+	  - Why we chose `kubeadm`
 	  - What are pros and cons?
-- Install "Minikube"
+- Install "kubeadm" 
+- Explain different stages how i prepared to provision complete kubernetes infrastructure.
+- All the template and scripts for the provisioning of the infrastructure. 
+- 
 - Start the `minikube` cluster
 	  `minikube start --cpus 4 --memory 4096`
 	  Output:
