@@ -3,6 +3,9 @@ kind: ConfigMap
 metadata:
   name: wordpress-db-config
 data:
-  WORDPRESS_DB_HOST: mysql
-  WORDPRESS_DB_USER: wordpress
+  WORDPRESS_DB_HOST: wordpress-mysql
   WORDPRESS_DB_NAME: wordpress
+  WORDPRESS_DB_USER: wordpress
+  WORDPRESS_DB_PASSWORD: your-password  # Store the MySQL password here
+  MYSQL_ROOT_PASSWORD: your-password    # Store the MySQL root password here
+  MYSQL_PASSWORD: your-password        # Store the MySQL user password here
