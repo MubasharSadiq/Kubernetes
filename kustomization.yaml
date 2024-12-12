@@ -8,3 +8,4 @@ resources:
   - mysql-pv.yaml
   - wordpress-pv.yaml
   - wordpress-db-configmap.yaml
+  - local-storage-class.yaml
